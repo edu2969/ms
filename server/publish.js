@@ -60,7 +60,7 @@ Meteor.publishComposite('asistentes', function (eventoId) {
  * */
 Meteor.publish('users', function () {
     if (!Meteor.userId()) return [];
-    var rol = Meteor.auser().profile.role;
+    var rol = Meteor.user().profile.role;
     return Meteor.users.find({
         "profile.role": {
             $gte: rol

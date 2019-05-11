@@ -6,46 +6,17 @@ var firstRender = true;
 var listRenderHold = LaunchScreen.hold();
 listFadeInHold = null;
 
-var options = {
-  keepHistory: 1000 * 60 * 5,
-  localSearch: true,
-  collection: Events, 
-  subscriptionName: 'eventos.porIds'
-};
-var fields = ['name'];
-EventosSearch = new SearchSource('eventos', fields, options);
-
 Template.eventsList.rendered = function () {
   if (firstRender) {
     listFadeInHold = LaunchScreen.hold();
     listRenderHold.release();
     firstRender = false;
   }
-  Session.set('EventSelected', false);
-  EventosSearch.search('');
 };
 
 Template.eventsList.helpers({
-  isLoading: function() {
-    return EventosSearch.getStatus().loading;
-  },
   eventos: function () {
-    return EventosSearch.getData({
-      docTransform: function(doc) {
-        return _.extend(doc, {
-          cliente: function() {
-            return { nodata: "Ejemplo" };
-          },
-          estado: function () {
-            return 'Activo';
-          }
-        })
-      },
-      transform: function(matchText, regExp) {
-        return matchText.replace(regExp, "<span style='color: #BF55EC'>$&</span>")
-      },
-      sort: {date: -1}
-    });
+    return Events.find();
   },
   isRPAdmin: function () {
     return Meteor.user().profile.isRPAdmin || Meteor.user().profile.role == 1
@@ -79,10 +50,6 @@ Template.eventsList.events({
     Session.set('ParametrosConfirmacion', { entidad: 'Evento', id: id });
     $('#modal-confirmacion').modal('show');
   },
-  'keyup #lupa': _.throttle(function(e) {
-    var text = $(e.target).val().trim();
-    EventosSearch.search(text);
-  }, 200),
   "click .btn-rbi": function(e) {
     console.log(e.currentTarget.id);
     Meteor.call("generarBI", e.currentTarget.id, function(err, resp) {
