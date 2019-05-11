@@ -16,7 +16,7 @@ Template.eventsList.rendered = function () {
 
 Template.eventsList.helpers({
   eventos: function () {
-    return Events.find();
+    return Events.find({ }, { sort: {date: -1}});
   },
   isRPAdmin: function () {
     return Meteor.user().profile.isRPAdmin || Meteor.user().profile.role == 1
