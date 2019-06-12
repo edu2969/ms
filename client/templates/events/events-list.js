@@ -43,7 +43,7 @@ Template.eventsList.events({
   'click .btn-list': function (e) {
     var eventId = e.currentTarget.id.substring(9)
     Session.set('EventoSeleccionado', Events.findOne(eventId))
-    Router.go('/attendersList/' + eventId)
+    Router.go('/attendersList/' + eventId + "/0")
   },
   'click .btn-eliminar': function (e) {
     var id = e.currentTarget.id;

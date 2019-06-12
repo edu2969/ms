@@ -22,12 +22,12 @@ Meteor.publish('eventos', function () {
     });
 });
 
-Meteor.publish('clientes', function () {
+Meteor.publish('clientes', function (pagina) {
     return Guests.find();
 });
 
-Meteor.publishComposite('asistentes', function (eventoId) {
-    //console.log('eventoId: ' + eventoId);
+Meteor.publishComposite('asistentes', function (eventoId, pagina) {
+    let saltos = 20;
     return {
         find: function () {
             return Events.find({
@@ -38,6 +38,9 @@ Meteor.publishComposite('asistentes', function (eventoId) {
             find: function (e) {
                 return Attenders.find({
                     eventId: e._id
+                }, { 
+                    skip: saltos * pagina, 
+                    limit: saltos 
                 });
             },
             children: [{
@@ -50,6 +53,14 @@ Meteor.publishComposite('asistentes', function (eventoId) {
     }]
     }
 });
+
+Meteor.publish("baneados", function() {
+    return Guests.find({ baneado: true });
+});
+
+Meteor.publish("top10", function() {
+    return Guests.find({}, { sort: { asistencias: 1 }, limit: 20 });
+})
 
 /*
  * admin 1
