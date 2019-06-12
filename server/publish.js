@@ -22,10 +22,6 @@ Meteor.publish('eventos', function () {
     });
 });
 
-Meteor.publish('clientes', function (pagina) {
-    return Guests.find();
-});
-
 Meteor.publishComposite('asistentes', function (eventoId, pagina) {
     let saltos = 20;
     return {
