@@ -19,7 +19,6 @@ Meteor.publish('eventos', function () {
     fields: {
       created: false,
       userId: false,
-      closeTime: false,
       averageCheckTime: false
     },
     sort: {
