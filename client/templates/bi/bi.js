@@ -1,67 +1,24 @@
 var EDITING_KEY = 'bi';
 Session.setDefault(EDITING_KEY, false);
 
-// Track if this is the first time the list template is rendered
 var firstRender = true;
 var listRenderHold = LaunchScreen.hold();
 listFadeInHold = null;
 
-Template.bi.rendered = function () {
-  var fechaDesde = Router.current().params._fechaDesde
-  var fechaHasta = Router.current().params._fechaHasta
-  
-  $('#input-desde').datetimepicker({
-    format: 'DD/MM/YY',
-    defaultDate: moment(fechaDesde, "DD-MM-YYYY").toDate()
-  });
-
-  $('#input-hasta').datetimepicker({
-    format: 'DD/MM/YY',
-    defaultDate: moment(fechaHasta, "DD-MM-YYYY").toDate()
-  });
-
-  InicializarTorta();
-};
-
-Template.bi.helpers({
-  top10: function() {
-    return Guests.find({}, { sort: { asistencias: -1 }, limit: 10 }).map(function(a, i) {
-      a.indice = i + 1;
-      return a;
-    });
-  },
-  baneados: function() {
-    return Guests.find({ baneado: true }).map(function(a, i) {
-      a.indice = i + 1;
-      return a;
-    });;
-  }
-});
-
-Template.bi.events({
-  "click #btn-refrescar": function(e) {
-    var desde = moment($('#input-desde').val(), "DD/MM/YY").format("DD-MM-YYYY") 
-    var hasta = moment($('#input-hasta').val(), "DD/MM/YY").format("DD-MM-YYYY") 
-    Router.go("/bi/" + desde + "/" + hasta)
-  }
-})
-
 InicializarTorta = function () {
-// Paleta para torta
+  return false;
+  // Paleta para torta
   var PALETA_COLORES = [
-    "#7e3838", "#7e6538", "#7c7e38", "#587e38", 
-    "#387e45","#387e6a", "#386a7e", "#f00", 
+    "#7e3838", "#7e6538", "#7c7e38", "#587e38",
+    "#387e45", "#387e6a", "#386a7e", "#f00",
     "#0f0", "#00f", "#ff0", "#f0f", "#0ff"];
   // Obtencion de la data
- var regs = BIRPs.find().map(function(a, i) {
-   a.rp = Meteor.users.findOne(a.rpId);
-   return a;
- });
-  
+  var regs = [];
+
   var contenido = [];
   var indice = 0;
-  regs.forEach(function(reg) {
-    if(!contenido[reg.rp._id]) {
+  regs.forEach(function (reg) {
+    if (!contenido[reg.rp._id]) {
       contenido[reg.rp._id] = {
         label: reg.rp.profile.name,
         value: reg.asisten,
@@ -78,7 +35,7 @@ InicializarTorta = function () {
     }
   });
   var pieArray = [];
-  for(key in contenido) {
+  for (key in contenido) {
     pieArray.push({
       label: contenido[key].label,
       value: contenido[key].value,
@@ -125,3 +82,65 @@ InicializarTorta = function () {
     }
   });
 }
+
+Template.bi.rendered = function () {
+  if (firstRender) {
+    listFadeInHold = LaunchScreen.hold();
+    listRenderHold.release();
+    firstRender = false;
+  }
+
+  var fechaDesde = moment().add(-2, 'months').toDate();
+  var fechaHasta = new Date();
+
+  $('#input-desde').datetimepicker({
+    format: 'DD/MM/YY',
+    defaultDate: fechaDesde
+  });
+
+  $('#input-hasta').datetimepicker({
+    format: 'DD/MM/YY',
+    defaultDate: fechaHasta
+  });
+  
+  Session.set("FiltroBI", {
+    resumen: true
+  });
+
+  Meteor.call("ObtenerVistaBI",
+    fechaDesde, fechaHasta,
+    function (err, resp) {
+      if (!err) {
+        Session.set("VistaBI", resp);
+        InicializarTorta();
+      }
+    });  
+};
+
+Template.bi.helpers({
+  tabla() {
+    return Session.get("VistaBI");
+  },
+  filtro() {
+    return Session.get("FiltroBI");
+  }
+});
+
+Template.bi.events({
+  "click #btn-refrescar": function (e) {
+    var desde = moment($('#input-desde').val(), "DD/MM/YY").toDate();
+    var hasta = moment($('#input-hasta').val(), "DD/MM/YY").toDate();
+    Meteor.call("ObtenerVistaBI", desde, hasta, function (err, resp) {
+      if (!err) {
+        Session.set("VistaBI", resp);
+        InicializarTorta();
+      }
+    });
+  },
+  "click input[type='checkbox']"(e) {
+    var tipo = e.currentTarget.attributes.name.value;
+    var filtro = Session.get("FiltroBI");
+    filtro[tipo]  = !filtro[tipo];
+    Session.set("FiltroBI", filtro);
+  }
+})
